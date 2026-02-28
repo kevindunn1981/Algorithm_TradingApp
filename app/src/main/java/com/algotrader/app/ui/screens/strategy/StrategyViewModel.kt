@@ -5,11 +5,28 @@ import androidx.lifecycle.viewModelScope
 import com.algotrader.app.data.model.Strategy
 import com.algotrader.app.data.model.StrategyLanguage
 import com.algotrader.app.data.repository.StrategyRepository
+import com.algotrader.app.engine.strategy.templates.AdxTrendStrategy
 import com.algotrader.app.engine.strategy.templates.BollingerBandStrategy
+import com.algotrader.app.engine.strategy.templates.BreakoutMomentumStrategy
+import com.algotrader.app.engine.strategy.templates.CciStrategy
+import com.algotrader.app.engine.strategy.templates.DonchianBreakoutStrategy
+import com.algotrader.app.engine.strategy.templates.DualMaVolumeStrategy
+import com.algotrader.app.engine.strategy.templates.ElderTripleScreenStrategy
+import com.algotrader.app.engine.strategy.templates.IchimokuStrategy
+import com.algotrader.app.engine.strategy.templates.KeltnerChannelStrategy
 import com.algotrader.app.engine.strategy.templates.MacdStrategy
+import com.algotrader.app.engine.strategy.templates.MeanReversionConfluenceStrategy
 import com.algotrader.app.engine.strategy.templates.MomentumStrategy
+import com.algotrader.app.engine.strategy.templates.OpeningRangeBreakoutStrategy
+import com.algotrader.app.engine.strategy.templates.PairsTradingStrategy
 import com.algotrader.app.engine.strategy.templates.RsiStrategy
 import com.algotrader.app.engine.strategy.templates.SmaCrossoverStrategy
+import com.algotrader.app.engine.strategy.templates.StochasticMomentumStrategy
+import com.algotrader.app.engine.strategy.templates.SupertrendStrategy
+import com.algotrader.app.engine.strategy.templates.TripleEmaCrossoverStrategy
+import com.algotrader.app.engine.strategy.templates.TurtleTradingStrategy
+import com.algotrader.app.engine.strategy.templates.VwapMeanReversionStrategy
+import com.algotrader.app.engine.strategy.templates.WilliamsRStrategy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,11 +68,32 @@ class StrategyViewModel @Inject constructor(
     val editorState: StateFlow<StrategyEditorUiState> = _editorState.asStateFlow()
 
     val templates = listOf(
+        // Trend Following
         StrategyTemplate("SMA Crossover", "Golden/Death cross strategy", SmaCrossoverStrategy.TEMPLATE_CODE),
-        StrategyTemplate("RSI Mean Reversion", "Oversold/Overbought reversals", RsiStrategy.TEMPLATE_CODE),
         StrategyTemplate("MACD Crossover", "Signal line crossover trades", MacdStrategy.TEMPLATE_CODE),
-        StrategyTemplate("Bollinger Bands", "Mean reversion at bands", BollingerBandStrategy.TEMPLATE_CODE),
-        StrategyTemplate("Multi-Indicator Momentum", "EMA + RSI combined", MomentumStrategy.TEMPLATE_CODE)
+        StrategyTemplate("Supertrend", "ATR-based trend with dynamic support/resistance", SupertrendStrategy.TEMPLATE_CODE),
+        StrategyTemplate("ADX Trend Following", "DI+/DI- crossover with ADX strength filter", AdxTrendStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Turtle Trading", "Donchian Channel breakout (Richard Dennis)", TurtleTradingStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Donchian Breakout", "Channel breakout with EMA trend filter", DonchianBreakoutStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Ichimoku Cloud", "Tenkan/Kijun cross filtered by Kumo cloud", IchimokuStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Triple EMA Crossover", "3 EMA ribbon + RSI + volume confirmation", TripleEmaCrossoverStrategy.TEMPLATE_CODE),
+        // Mean Reversion
+        StrategyTemplate("RSI Mean Reversion", "Oversold/Overbought reversals", RsiStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Bollinger Bands", "Mean reversion at Bollinger bands", BollingerBandStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Keltner Channel", "EMA + ATR band mean reversion with RSI", KeltnerChannelStrategy.TEMPLATE_CODE),
+        StrategyTemplate("VWAP Mean Reversion", "Fade deviations from volume-weighted avg price", VwapMeanReversionStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Z-Score Mean Reversion", "Statistical Z-score deviation trading", PairsTradingStrategy.TEMPLATE_CODE),
+        StrategyTemplate("CCI Trend & Reversal", "Commodity Channel Index signals with trend", CciStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Williams %R", "Percent Range reversals with EMA trend filter", WilliamsRStrategy.TEMPLATE_CODE),
+        // Multi-Indicator / Advanced
+        StrategyTemplate("Multi-Indicator Momentum", "EMA + RSI combined", MomentumStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Mean Reversion Confluence", "RSI + Bollinger + MACD for reversals", MeanReversionConfluenceStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Elder Triple Screen", "Multi-timeframe MACD + Stochastic + price", ElderTripleScreenStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Stochastic Momentum", "K/D cross at extremes + 200 EMA trend", StochasticMomentumStrategy.TEMPLATE_CODE),
+        // Breakout / Momentum
+        StrategyTemplate("Opening Range Breakout", "N-bar range breakout with volume confirmation", OpeningRangeBreakoutStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Breakout Momentum", "Volume-confirmed breakout + EMA trend", BreakoutMomentumStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Dual MA + Volume", "EMA crossover with above-avg volume filter", DualMaVolumeStrategy.TEMPLATE_CODE)
     )
 
     init {

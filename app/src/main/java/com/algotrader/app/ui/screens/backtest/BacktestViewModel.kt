@@ -8,11 +8,7 @@ import com.algotrader.app.data.model.Strategy
 import com.algotrader.app.data.repository.MarketDataRepository
 import com.algotrader.app.data.repository.StrategyRepository
 import com.algotrader.app.engine.BacktestEngine
-import com.algotrader.app.engine.strategy.templates.BollingerBandStrategy
-import com.algotrader.app.engine.strategy.templates.MacdStrategy
-import com.algotrader.app.engine.strategy.templates.MomentumStrategy
-import com.algotrader.app.engine.strategy.templates.RsiStrategy
-import com.algotrader.app.engine.strategy.templates.SmaCrossoverStrategy
+import com.algotrader.app.engine.strategy.templates.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -176,12 +172,32 @@ class BacktestViewModel @Inject constructor(
     }
 
     private fun resolveStrategy(strategy: Strategy): com.algotrader.app.engine.strategy.TradingStrategy {
+        val name = strategy.name.lowercase()
+        val code = strategy.code.lowercase()
+
         return when {
-            strategy.code.contains("SMA Crossover") || strategy.name.contains("SMA") -> SmaCrossoverStrategy()
-            strategy.code.contains("RSI") || strategy.name.contains("RSI") -> RsiStrategy()
-            strategy.code.contains("MACD") || strategy.name.contains("MACD") -> MacdStrategy()
-            strategy.code.contains("Bollinger") || strategy.name.contains("Bollinger") -> BollingerBandStrategy()
-            strategy.code.contains("Momentum") || strategy.name.contains("Momentum") -> MomentumStrategy()
+            name.contains("turtle") || code.contains("turtle") -> TurtleTradingStrategy()
+            name.contains("ichimoku") || code.contains("ichimoku") -> IchimokuStrategy()
+            name.contains("vwap") || code.contains("vwap mean") -> VwapMeanReversionStrategy()
+            name.contains("keltner") || code.contains("keltner") -> KeltnerChannelStrategy()
+            name.contains("adx") || code.contains("adx trend") -> AdxTrendStrategy()
+            name.contains("z-score") || code.contains("z-score") -> PairsTradingStrategy()
+            name.contains("opening range") || code.contains("opening range") -> OpeningRangeBreakoutStrategy()
+            name.contains("supertrend") || code.contains("supertrend") -> SupertrendStrategy()
+            name.contains("triple ema") || code.contains("triple ema") -> TripleEmaCrossoverStrategy()
+            name.contains("confluence") || code.contains("confluence") -> MeanReversionConfluenceStrategy()
+            name.contains("breakout momentum") || code.contains("breakout momentum") -> BreakoutMomentumStrategy()
+            name.contains("williams") || code.contains("williams") -> WilliamsRStrategy()
+            name.contains("cci") || code.contains("cci") -> CciStrategy()
+            name.contains("dual ma") || code.contains("dual ma") -> DualMaVolumeStrategy()
+            name.contains("elder") || code.contains("elder") -> ElderTripleScreenStrategy()
+            name.contains("donchian") || code.contains("donchian") -> DonchianBreakoutStrategy()
+            name.contains("stochastic") || code.contains("stochastic") -> StochasticMomentumStrategy()
+            name.contains("sma") || code.contains("sma crossover") -> SmaCrossoverStrategy()
+            name.contains("rsi") || code.contains("rsi") -> RsiStrategy()
+            name.contains("macd") || code.contains("macd") -> MacdStrategy()
+            name.contains("bollinger") || code.contains("bollinger") -> BollingerBandStrategy()
+            name.contains("momentum") || code.contains("momentum") -> MomentumStrategy()
             else -> SmaCrossoverStrategy()
         }
     }

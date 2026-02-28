@@ -2,7 +2,23 @@ package com.algotrader.app.engine.strategy
 
 import com.algotrader.app.data.model.OrderType
 import com.algotrader.app.data.model.PriceBar
-import com.algotrader.app.engine.indicators.*
+import com.algotrader.app.engine.indicators.ATR
+import com.algotrader.app.engine.indicators.BollingerBands
+import com.algotrader.app.engine.indicators.BollingerBandsResult
+import com.algotrader.app.engine.indicators.CCI
+import com.algotrader.app.engine.indicators.DonchianChannel
+import com.algotrader.app.engine.indicators.DonchianChannelResult
+import com.algotrader.app.engine.indicators.EMA
+import com.algotrader.app.engine.indicators.KeltnerChannel
+import com.algotrader.app.engine.indicators.KeltnerChannelResult
+import com.algotrader.app.engine.indicators.MACD
+import com.algotrader.app.engine.indicators.MacdResult
+import com.algotrader.app.engine.indicators.RSI
+import com.algotrader.app.engine.indicators.SMA
+import com.algotrader.app.engine.indicators.Supertrend
+import com.algotrader.app.engine.indicators.SupertrendResult
+import com.algotrader.app.engine.indicators.VWAP
+import com.algotrader.app.engine.indicators.WilliamsR
 
 fun strategy(name: String, block: StrategyBuilder.() -> Unit): TradingStrategy {
     val builder = StrategyBuilder(name)
@@ -96,6 +112,37 @@ class StrategyContext(val bars: List<PriceBar>) {
 
     fun vwap(): List<Double> =
         indicatorCache.getOrPut("VWAP") { VWAP().calculate(bars) }
+
+    fun cci(period: Int = 20): List<Double> =
+        indicatorCache.getOrPut("CCI_$period") { CCI(period).calculate(bars) }
+
+    fun williamsR(period: Int = 14): List<Double> =
+        indicatorCache.getOrPut("WR_$period") { WilliamsR(period).calculate(bars) }
+
+    fun donchianChannel(period: Int = 20): DonchianChannelResult {
+        val key = "DC_$period"
+        val upper = indicatorCache.getOrPut("${key}_upper") { DonchianChannel(period).calculateFull(bars).upper }
+        val lower = indicatorCache.getOrPut("${key}_lower") { DonchianChannel(period).calculateFull(bars).lower }
+        val middle = indicatorCache.getOrPut("${key}_middle") { DonchianChannel(period).calculateFull(bars).middle }
+        return DonchianChannelResult(upper, lower, middle)
+    }
+
+    fun keltnerChannel(emaPeriod: Int = 20, atrMult: Double = 2.0): KeltnerChannelResult {
+        val key = "KC_${emaPeriod}_$atrMult"
+        val upper = indicatorCache.getOrPut("${key}_upper") { KeltnerChannel(emaPeriod, 14, atrMult).calculateFull(bars).upper }
+        val middle = indicatorCache.getOrPut("${key}_middle") { KeltnerChannel(emaPeriod, 14, atrMult).calculateFull(bars).middle }
+        val lower = indicatorCache.getOrPut("${key}_lower") { KeltnerChannel(emaPeriod, 14, atrMult).calculateFull(bars).lower }
+        return KeltnerChannelResult(upper, middle, lower)
+    }
+
+    fun supertrend(atrPeriod: Int = 10, multiplier: Double = 3.0): SupertrendResult {
+        val key = "ST_${atrPeriod}_$multiplier"
+        val st = indicatorCache.getOrPut("${key}_st") { Supertrend(atrPeriod, multiplier).calculateFull(bars).supertrend }
+        val dir = indicatorCache.getOrPut("${key}_dir") { Supertrend(atrPeriod, multiplier).calculateFull(bars).direction.map { it.toDouble() } }
+        val ub = indicatorCache.getOrPut("${key}_ub") { Supertrend(atrPeriod, multiplier).calculateFull(bars).upperBand }
+        val lb = indicatorCache.getOrPut("${key}_lb") { Supertrend(atrPeriod, multiplier).calculateFull(bars).lowerBand }
+        return SupertrendResult(st, dir.map { it.toInt() }, ub, lb)
+    }
 
     fun crossOver(series1: List<Double>, series2: List<Double>, index: Int): Boolean {
         if (index < 1) return false
