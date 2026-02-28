@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.algotrader.app.data.model.Account
 import com.algotrader.app.data.model.Position
 import com.algotrader.app.data.model.Strategy
+import com.algotrader.app.data.remote.broker.BrokerManager
+import com.algotrader.app.data.remote.broker.BrokerType
 import com.algotrader.app.data.repository.StrategyRepository
 import com.algotrader.app.data.repository.TradingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,13 +24,16 @@ data class DashboardUiState(
     val totalPnl: Double = 0.0,
     val winRate: Double = 0.0,
     val totalTrades: Int = 0,
+    val activeBroker: BrokerType = BrokerType.ALPACA,
+    val brokerConnected: Boolean = false,
     val error: String? = null
 )
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val tradingRepository: TradingRepository,
-    private val strategyRepository: StrategyRepository
+    private val strategyRepository: StrategyRepository,
+    private val brokerManager: BrokerManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -36,6 +41,20 @@ class DashboardViewModel @Inject constructor(
 
     init {
         loadDashboard()
+        observeBrokerState()
+    }
+
+    private fun observeBrokerState() {
+        viewModelScope.launch {
+            brokerManager.activeBrokerType.collect { type ->
+                _uiState.value = _uiState.value.copy(activeBroker = type)
+            }
+        }
+        viewModelScope.launch {
+            brokerManager.connectionState.collect { connected ->
+                _uiState.value = _uiState.value.copy(brokerConnected = connected)
+            }
+        }
     }
 
     fun loadDashboard() {

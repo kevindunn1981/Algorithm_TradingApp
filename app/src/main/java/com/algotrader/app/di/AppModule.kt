@@ -10,6 +10,7 @@ import com.algotrader.app.data.local.dao.TradeDao
 import com.algotrader.app.data.local.dao.WatchlistDao
 import com.algotrader.app.data.remote.api.AlpacaMarketDataApi
 import com.algotrader.app.data.remote.api.AlpacaTradingApi
+import com.algotrader.app.data.remote.moomoo.MoomooOpenDClient
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,7 +22,6 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -30,6 +30,8 @@ object AppModule {
 
     private const val TRADING_BASE_URL = "https://paper-api.alpaca.markets/"
     private const val MARKET_DATA_BASE_URL = "https://data.alpaca.markets/"
+
+    // ── Database ────────────────────────────────────────────────────────
 
     @Provides
     @Singleton
@@ -55,6 +57,8 @@ object AppModule {
 
     @Provides
     fun provideBacktestResultDao(db: AppDatabase): BacktestResultDao = db.backtestResultDao()
+
+    // ── Alpaca Networking ───────────────────────────────────────────────
 
     @Provides
     @Singleton
@@ -104,5 +108,13 @@ object AppModule {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(AlpacaMarketDataApi::class.java)
+    }
+
+    // ── Moomoo Networking ───────────────────────────────────────────────
+
+    @Provides
+    @Singleton
+    fun provideMoomooOpenDClient(): MoomooOpenDClient {
+        return MoomooOpenDClient()
     }
 }

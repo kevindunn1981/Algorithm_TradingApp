@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.TrendingUp
@@ -33,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.algotrader.app.data.remote.broker.BrokerType
 import com.algotrader.app.ui.components.LoadingScreen
 import com.algotrader.app.ui.components.MetricCard
 import com.algotrader.app.ui.components.PnlDisplay
@@ -67,6 +69,15 @@ fun DashboardScreen(
                 }
             },
             actions = {
+                val brokerName = when (uiState.activeBroker) {
+                    BrokerType.ALPACA -> "Alpaca"
+                    BrokerType.MOOMOO -> "Moomoo"
+                }
+                Text(
+                    text = brokerName,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 IconButton(onClick = { viewModel.refresh() }) {
                     Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                 }
