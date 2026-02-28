@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="profit_green">#FF4CAF50</color>
+    <color name="loss_red">#FFF44336</color>
+    <color name="chart_blue">#FF2196F3</color>
+    <color name="chart_orange">#FFFF9800</color>
+    <color name="chart_purple">#FF9C27B0</color>
+    <color name="neutral_gray">#FF9E9E9E</color>
+</resources>
