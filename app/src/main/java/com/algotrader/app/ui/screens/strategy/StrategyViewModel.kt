@@ -1,0 +1,161 @@
+package com.algotrader.app.ui.screens.strategy
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.algotrader.app.data.model.Strategy
+import com.algotrader.app.data.model.StrategyLanguage
+import com.algotrader.app.data.repository.StrategyRepository
+import com.algotrader.app.engine.strategy.templates.BollingerBandStrategy
+import com.algotrader.app.engine.strategy.templates.MacdStrategy
+import com.algotrader.app.engine.strategy.templates.MomentumStrategy
+import com.algotrader.app.engine.strategy.templates.RsiStrategy
+import com.algotrader.app.engine.strategy.templates.SmaCrossoverStrategy
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+data class StrategyListUiState(
+    val strategies: List<Strategy> = emptyList(),
+    val isLoading: Boolean = true
+)
+
+data class StrategyEditorUiState(
+    val strategy: Strategy? = null,
+    val code: String = "",
+    val name: String = "",
+    val description: String = "",
+    val isNew: Boolean = true,
+    val isSaving: Boolean = false,
+    val savedSuccessfully: Boolean = false,
+    val error: String? = null
+)
+
+data class StrategyTemplate(
+    val name: String,
+    val description: String,
+    val code: String
+)
+
+@HiltViewModel
+class StrategyViewModel @Inject constructor(
+    private val strategyRepository: StrategyRepository
+) : ViewModel() {
+
+    private val _listState = MutableStateFlow(StrategyListUiState())
+    val listState: StateFlow<StrategyListUiState> = _listState.asStateFlow()
+
+    private val _editorState = MutableStateFlow(StrategyEditorUiState())
+    val editorState: StateFlow<StrategyEditorUiState> = _editorState.asStateFlow()
+
+    val templates = listOf(
+        StrategyTemplate("SMA Crossover", "Golden/Death cross strategy", SmaCrossoverStrategy.TEMPLATE_CODE),
+        StrategyTemplate("RSI Mean Reversion", "Oversold/Overbought reversals", RsiStrategy.TEMPLATE_CODE),
+        StrategyTemplate("MACD Crossover", "Signal line crossover trades", MacdStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Bollinger Bands", "Mean reversion at bands", BollingerBandStrategy.TEMPLATE_CODE),
+        StrategyTemplate("Multi-Indicator Momentum", "EMA + RSI combined", MomentumStrategy.TEMPLATE_CODE)
+    )
+
+    init {
+        loadStrategies()
+    }
+
+    fun loadStrategies() {
+        viewModelScope.launch {
+            strategyRepository.getAllStrategies().collect { strategies ->
+                _listState.value = StrategyListUiState(
+                    strategies = strategies,
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    fun loadStrategy(id: Long) {
+        viewModelScope.launch {
+            val strategy = strategyRepository.getStrategyById(id)
+            if (strategy != null) {
+                _editorState.value = StrategyEditorUiState(
+                    strategy = strategy,
+                    code = strategy.code,
+                    name = strategy.name,
+                    description = strategy.description,
+                    isNew = false
+                )
+            }
+        }
+    }
+
+    fun newStrategy() {
+        _editorState.value = StrategyEditorUiState(
+            code = SmaCrossoverStrategy.TEMPLATE_CODE,
+            name = "New Strategy",
+            description = "Describe your strategy",
+            isNew = true
+        )
+    }
+
+    fun loadTemplate(template: StrategyTemplate) {
+        _editorState.value = _editorState.value.copy(
+            code = template.code,
+            name = template.name,
+            description = template.description
+        )
+    }
+
+    fun updateCode(code: String) {
+        _editorState.value = _editorState.value.copy(code = code)
+    }
+
+    fun updateName(name: String) {
+        _editorState.value = _editorState.value.copy(name = name)
+    }
+
+    fun updateDescription(description: String) {
+        _editorState.value = _editorState.value.copy(description = description)
+    }
+
+    fun saveStrategy() {
+        viewModelScope.launch {
+            _editorState.value = _editorState.value.copy(isSaving = true)
+            try {
+                val state = _editorState.value
+                val strategy = Strategy(
+                    id = state.strategy?.id ?: 0,
+                    name = state.name,
+                    description = state.description,
+                    code = state.code,
+                    language = StrategyLanguage.KOTLIN_DSL
+                )
+                if (state.isNew) {
+                    strategyRepository.saveStrategy(strategy)
+                } else {
+                    strategyRepository.updateStrategy(strategy)
+                }
+                _editorState.value = _editorState.value.copy(
+                    isSaving = false,
+                    savedSuccessfully = true
+                )
+            } catch (e: Exception) {
+                _editorState.value = _editorState.value.copy(
+                    isSaving = false,
+                    error = e.message
+                )
+            }
+        }
+    }
+
+    fun deleteStrategy(strategy: Strategy) {
+        viewModelScope.launch {
+            strategyRepository.deleteStrategy(strategy)
+        }
+    }
+
+    fun toggleActive(strategy: Strategy) {
+        viewModelScope.launch {
+            strategyRepository.setActive(strategy.id, !strategy.isActive)
+        }
+    }
+}
