@@ -1,8 +1,25 @@
 # AlgoTrader - Algorithmic Trading App for Android
 
-A comprehensive, open-source Android app for algorithmic and programming-based stock trading. Build, backtest, and deploy custom trading strategies directly from your phone.
+A comprehensive, open-source Android app for algorithmic and programming-based stock trading. Build, backtest, and deploy custom trading strategies directly from your phone. Supports multiple brokers including **Alpaca** and **Moomoo (Futu OpenAPI)**.
 
 ## Features
+
+### Multi-Broker Support
+Switch between brokers at runtime from the Settings screen:
+
+| Feature | Alpaca | Moomoo |
+|---------|--------|--------|
+| US Stocks & ETFs | Yes | Yes |
+| Hong Kong Stocks | -- | Yes |
+| China A-Shares | -- | Yes |
+| Singapore / Japan / Australia | -- | Yes |
+| Options & Futures | -- | Yes |
+| Fractional Shares | Yes | -- |
+| Commission-Free | Yes | -- |
+| Paper Trading | Yes | Yes |
+| Level 2 Depth | -- | Yes (60 levels) |
+| Historical Data | Yes | Up to 20 years |
+| Connection | REST API | OpenD Gateway (WebSocket) |
 
 ### Strategy Builder & Code Editor
 - **Built-in code editor** with syntax highlighting and line numbers
@@ -28,7 +45,7 @@ Full library of technical analysis indicators computed in real-time:
 - **Stochastic Oscillator** - %K and %D lines
 
 ### Backtesting Engine
-- Test strategies against historical market data
+- Test strategies against historical market data from either broker
 - Configurable parameters:
   - Symbol, timeframe (1Min to 1Day), lookback period
   - Initial capital, position sizing
@@ -45,24 +62,27 @@ Full library of technical analysis indicators computed in real-time:
 - Falls back to generated sample data when API data is unavailable
 
 ### Live & Paper Trading
-- **Alpaca Markets API** integration for commission-free trading
-- **Paper trading mode** for risk-free strategy testing
+- **Alpaca Markets API** - Commission-free US stock/ETF trading via REST
+- **Moomoo OpenAPI** - Multi-market trading via OpenD WebSocket gateway
+- Paper trading mode for risk-free strategy testing on both brokers
 - Submit market, limit, stop, and trailing stop orders
 - Real-time position tracking and P&L monitoring
 - Order management (submit, cancel, view history)
 
 ### Market Data
-- Real-time stock quotes and snapshots via Alpaca Market Data API
+- Real-time stock quotes and snapshots from either broker
 - **Candlestick charts** with OHLC data
 - **Sparkline charts** for quick price visualization
 - Symbol search and discovery
 - Popular stocks quick-access chips
 - Historical bar data with local caching
+- Moomoo: Up to 20 years of daily candlestick history
 
 ### Portfolio Dashboard
 - Account overview: equity, cash, buying power
 - Open positions with unrealized P&L
 - Active strategy monitoring
+- Active broker indicator
 - Win rate and total P&L tracking
 - Trade history log
 
@@ -73,9 +93,11 @@ Full library of technical analysis indicators computed in real-time:
 - Quick-tap to view detailed charts
 
 ### Settings & Configuration
-- Alpaca API key management with secure input
+- **Broker selection** with feature comparison cards
+- Alpaca: API key/secret management
+- Moomoo: OpenD host/port, account ID, market selection (US/HK/CN/SG/JP/AU)
 - Paper/live trading mode toggle
-- Connection testing
+- Connection testing for both brokers
 - Trading defaults (capital, position size, stop loss)
 - Push notification preferences (trades, signals)
 - Dark/light theme support
@@ -88,8 +110,12 @@ Built with modern Android development best practices:
 com.algotrader.app/
 ├── data/
 │   ├── local/          # Room database, DAOs, entities
-│   ├── remote/         # Retrofit API interfaces, DTOs
-│   ├── repository/     # Data repositories
+│   ├── remote/
+│   │   ├── api/        # Alpaca REST API interfaces
+│   │   ├── dto/        # Alpaca DTOs
+│   │   ├── moomoo/     # Moomoo OpenD client, DTOs, constants
+│   │   └── broker/     # Broker abstraction layer
+│   ├── repository/     # Data repositories (broker-agnostic)
 │   └── model/          # Domain models
 ├── engine/
 │   ├── indicators/     # Technical analysis indicators
@@ -104,13 +130,29 @@ com.algotrader.app/
 └── util/               # Formatting utilities
 ```
 
+### Broker Abstraction Layer
+
+The app uses a clean abstraction to support multiple brokers:
+
+```
+BrokerProvider (interface)
+├── AlpacaBrokerProvider  ─── Alpaca REST API (Retrofit)
+└── MoomooBrokerProvider  ─── Moomoo OpenD (WebSocket)
+
+MarketDataProvider (interface)
+├── AlpacaBrokerProvider  ─── Alpaca Market Data API
+└── MoomooBrokerProvider  ─── Moomoo Quote/KLine API
+
+BrokerManager ─── Runtime broker switching & delegation
+```
+
 ### Tech Stack
 - **Language**: Kotlin
 - **UI**: Jetpack Compose with Material 3
 - **Architecture**: MVVM with StateFlow
 - **DI**: Hilt (Dagger)
 - **Database**: Room
-- **Networking**: Retrofit + OkHttp
+- **Networking**: Retrofit + OkHttp (Alpaca), WebSocket (Moomoo)
 - **Async**: Kotlin Coroutines & Flows
 - **Navigation**: Jetpack Navigation Compose
 - **Charts**: Custom Canvas-based composables
@@ -137,13 +179,37 @@ cd AlgoTrader
 
 4. Run on an emulator or physical device (API 26+)
 
-### Alpaca API Setup
+### Alpaca Setup
 
 1. Create a free account at [alpaca.markets](https://alpaca.markets)
 2. Generate API keys (paper trading recommended for testing)
-3. In the app, go to **Settings** and enter your API credentials
-4. Toggle **Paper Trading Mode** on for simulated trading
-5. Tap **Test Connection** to verify
+3. In the app, go to **Settings** > select **Alpaca** as broker
+4. Enter your API key and secret
+5. Toggle **Paper Trading Mode** on for simulated trading
+6. Tap **Test Connection** to verify
+
+### Moomoo (Futu OpenAPI) Setup
+
+1. Download and install **OpenD** from [openapi.moomoo.com](https://openapi.moomoo.com)
+2. Create a Moomoo/Futu account and complete KYC verification
+3. Launch OpenD on your computer or cloud server
+4. Configure OpenD to enable WebSocket access:
+   - Set WebSocket IP (use `0.0.0.0` for network access)
+   - Set WebSocket port (default: `33333`)
+5. In the app, go to **Settings** > select **Moomoo** as broker
+6. Enter the OpenD host IP and port
+7. Select your trading market (US, HK, CN, SG, JP, AU)
+8. Toggle **Paper Trading** for simulated environment
+9. Tap **Test Connection** to verify
+
+#### Moomoo API Features
+- **Protocol**: WebSocket with JSON messages to OpenD gateway
+- **Markets**: US, Hong Kong, China A-Shares, Singapore, Japan, Australia
+- **Order Types**: Market, Limit, Absolute Limit, Auction, Special Limit
+- **Data**: Real-time quotes, snapshots, K-lines (1min to yearly), Level 2 depth
+- **Push**: Real-time order status and quote updates via WebSocket
+- **History**: Up to 20 years of daily candlestick data
+- **Paper Trading**: Full simulated environment support
 
 ## Strategy DSL
 
@@ -189,6 +255,7 @@ This app was designed with inspiration from leading algorithmic trading platform
 
 - **[Roboquant](https://roboquant.org)** - Fast, flexible algorithmic trading framework
 - **[Alpaca Ribbit](https://github.com/alpacahq/ribbit-android)** - Reference trading app
+- **[Moomoo OpenAPI](https://openapi.moomoo.com)** - Multi-market trading gateway
 - **[Composer](https://composer.trade)** - AI-powered strategy builder
 - **[Tradetron](https://tradetron.tech)** - Multi-broker algo trading
 - **[Gunbot Quant](https://github.com/GuntharDeNiro/gunbot-quant)** - Quantitative trading toolkit
