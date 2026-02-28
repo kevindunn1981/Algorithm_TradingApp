@@ -24,16 +24,51 @@ Switch between brokers at runtime from the Settings screen:
 ### Strategy Builder & Code Editor
 - **Built-in code editor** with syntax highlighting and line numbers
 - **Kotlin DSL** for writing trading strategies with a clean, expressive API
-- **5 pre-built strategy templates** ready to customize:
-  - SMA Crossover (Golden/Death Cross)
-  - RSI Mean Reversion (Oversold/Overbought)
-  - MACD Signal Line Crossover
-  - Bollinger Band Bounce (Mean Reversion)
-  - Multi-Indicator Momentum (EMA + RSI)
+- **22 pre-built strategy templates** organized by category (see below)
 - Create, edit, save, and manage multiple strategies
 - Toggle strategies active/inactive for live execution
 
-### Technical Indicators
+### 22 Built-in Strategy Templates
+
+**Trend Following (8 strategies):**
+| Strategy | Description | Key Indicators |
+|----------|-------------|----------------|
+| SMA Crossover | Classic golden/death cross | SMA fast/slow |
+| MACD Crossover | Signal line crossover with histogram | MACD, Signal, Histogram |
+| Supertrend | ATR-based dynamic support/resistance flips | Supertrend (ATR) |
+| ADX Trend Following | DI+/DI- crossover filtered by ADX strength | ADX, DI+, DI- |
+| Turtle Trading | Richard Dennis' Donchian breakout system | Donchian Channel, ATR |
+| Donchian Channel Breakout | Channel breakout with EMA trend filter | Donchian, EMA |
+| Ichimoku Cloud | Tenkan/Kijun cross filtered by Kumo cloud | Tenkan, Kijun, Senkou A/B |
+| Triple EMA Crossover | 3 EMA ribbon + RSI momentum + volume | EMA(8/21/55), RSI, Volume |
+
+**Mean Reversion (7 strategies):**
+| Strategy | Description | Key Indicators |
+|----------|-------------|----------------|
+| RSI Mean Reversion | Oversold/overbought reversal signals | RSI |
+| Bollinger Band Bounce | Mean reversion at Bollinger band extremes | Bollinger Bands |
+| Keltner Channel Mean Reversion | EMA+ATR band bounce with RSI confirmation | Keltner Channel, RSI |
+| VWAP Mean Reversion | Fade price deviations from VWAP | VWAP |
+| Z-Score Mean Reversion | Statistical z-score deviation trading | Rolling Z-Score |
+| CCI Trend & Reversal | Commodity Channel Index signals with trend | CCI, SMA |
+| Williams %R | Percent Range reversals with trend filter | Williams %R, EMA |
+
+**Multi-Indicator / Advanced (3 strategies):**
+| Strategy | Description | Key Indicators |
+|----------|-------------|----------------|
+| Multi-Indicator Momentum | Combined EMA trend + RSI momentum | EMA, RSI |
+| Mean Reversion Confluence | 2-of-3 confluence: RSI + BB + MACD | RSI, Bollinger, MACD |
+| Elder Triple Screen | Multi-timeframe: trend + pullback + trigger | EMA, MACD, Stochastic |
+
+**Breakout / Momentum (4 strategies):**
+| Strategy | Description | Key Indicators |
+|----------|-------------|----------------|
+| Stochastic Momentum | %K/%D cross at extremes + 200 EMA trend | Stochastic, EMA(200) |
+| Opening Range Breakout | N-bar range breakout with volume confirmation | Price Range, Volume |
+| Breakout Momentum | Volume-confirmed breakout + EMA alignment | Price, Volume, EMA |
+| Dual MA + Volume Filter | EMA crossover with above-average volume | EMA(20/50), Volume |
+
+### 15 Technical Indicators
 Full library of technical analysis indicators computed in real-time:
 - **SMA** - Simple Moving Average (configurable period)
 - **EMA** - Exponential Moving Average (configurable period)
@@ -43,6 +78,13 @@ Full library of technical analysis indicators computed in real-time:
 - **VWAP** - Volume Weighted Average Price
 - **ATR** - Average True Range
 - **Stochastic Oscillator** - %K and %D lines
+- **Donchian Channel** - Highest high / lowest low channel
+- **Ichimoku Cloud** - Tenkan-sen, Kijun-sen, Senkou Span A/B, Chikou Span
+- **Keltner Channel** - EMA + ATR-based volatility bands
+- **ADX** - Average Directional Index with DI+ and DI-
+- **Supertrend** - ATR-based trend direction with dynamic levels
+- **Williams %R** - Percent Range momentum oscillator
+- **CCI** - Commodity Channel Index
 
 ### Backtesting Engine
 - Test strategies against historical market data from either broker
@@ -239,10 +281,15 @@ strategy("My Custom Strategy") {
 | `sma(period)` | Simple Moving Average |
 | `ema(period)` | Exponential Moving Average |
 | `rsi(period)` | Relative Strength Index |
-| `macd(fast, slow, signal)` | MACD with signal line |
-| `bollingerBands(period, stdDev)` | Bollinger Bands |
+| `macd(fast, slow, signal)` | MACD with signal line and histogram |
+| `bollingerBands(period, stdDev)` | Bollinger Bands (upper, middle, lower, bandwidth) |
 | `atr(period)` | Average True Range |
 | `vwap()` | Volume Weighted Average Price |
+| `cci(period)` | Commodity Channel Index |
+| `williamsR(period)` | Williams Percent Range |
+| `donchianChannel(period)` | Donchian Channel (upper, lower, middle) |
+| `keltnerChannel(emaPeriod, atrMult)` | Keltner Channel (EMA + ATR bands) |
+| `supertrend(atrPeriod, multiplier)` | Supertrend with direction and bands |
 | `crossOver(series1, series2, index)` | Detect bullish crossover |
 | `crossUnder(series1, series2, index)` | Detect bearish crossover |
 | `buy(...)` | Generate buy signal |
