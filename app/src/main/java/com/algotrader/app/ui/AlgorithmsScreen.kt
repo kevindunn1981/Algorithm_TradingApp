@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,7 +21,7 @@ private val SignalColor = Color(0xFFFF9800)
 
 @Composable
 fun AlgorithmsScreen(viewModel: TradingViewModel) {
-    val algorithms = viewModel.algorithms
+    val algorithms by viewModel.algorithms.collectAsState()
     val activeCount = algorithms.count { it.isActive }
 
     LazyColumn(
@@ -59,7 +61,7 @@ fun AlgorithmsScreen(viewModel: TradingViewModel) {
             }
         }
         items(algorithms) { algorithm ->
-            AlgorithmCard(algorithm)
+            AlgorithmCard(algorithm, onToggle = { viewModel.toggleAlgorithm(algorithm.name) })
         }
     }
 }
@@ -91,7 +93,7 @@ fun StatCard(label: String, value: String, color: Color, modifier: Modifier = Mo
 }
 
 @Composable
-fun AlgorithmCard(algorithm: TradingAlgorithm) {
+fun AlgorithmCard(algorithm: TradingAlgorithm, onToggle: () -> Unit = {}) {
     val statusColor = when {
         algorithm.status == "Signal Detected" -> SignalColor
         algorithm.isActive -> ActiveColor
@@ -127,6 +129,11 @@ fun AlgorithmCard(algorithm: TradingAlgorithm) {
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                     )
                 }
+                Switch(
+                    checked = algorithm.isActive,
+                    onCheckedChange = { onToggle() },
+                    modifier = Modifier.padding(start = 8.dp)
+                )
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
