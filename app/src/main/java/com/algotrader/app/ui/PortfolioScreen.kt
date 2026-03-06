@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,7 +20,8 @@ private val LossColor = Color(0xFFF44336)
 
 @Composable
 fun PortfolioScreen(viewModel: TradingViewModel) {
-    val holdings = viewModel.holdings
+    val holdings by viewModel.holdings.collectAsState()
+    val accountBalance by viewModel.accountBalance.collectAsState()
     val totalValue = viewModel.totalPortfolioValue
     val totalGainLoss = viewModel.totalGainLoss
     val totalGainLossPercent = viewModel.totalGainLossPercent
@@ -71,6 +74,12 @@ fun PortfolioScreen(viewModel: TradingViewModel) {
                         style = MaterialTheme.typography.bodyMedium,
                         color = changeColor,
                         fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Account Balance: $%,.2f".format(accountBalance),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }

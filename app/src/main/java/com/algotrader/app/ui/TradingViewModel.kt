@@ -1,45 +1,72 @@
 package com.algotrader.app.ui
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.algotrader.app.data.AccountRepository
+import com.algotrader.app.data.AlgorithmRepository
+import com.algotrader.app.data.CredentialManager
+import com.algotrader.app.data.Holding
+import com.algotrader.app.data.MarketDataRepository
 import com.algotrader.app.data.MarketIndex
-import com.algotrader.app.data.MockDataProvider
 import com.algotrader.app.data.Stock
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.algotrader.app.data.TradingAlgorithm
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.stateIn
 
-class TradingViewModel : ViewModel() {
+class TradingViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _watchlist = MutableStateFlow(MockDataProvider.watchlist)
-    val watchlist: StateFlow<List<Stock>> = _watchlist
+    private val accountRepository = AccountRepository(application)
+    private val marketDataRepository = MarketDataRepository(application)
+    private val algorithmRepository = AlgorithmRepository(application)
+    private val credentialManager = CredentialManager(application)
 
-    private val _indices = MutableStateFlow(MockDataProvider.marketIndices)
-    val indices: StateFlow<List<MarketIndex>> = _indices
+    data class CredentialState(
+        val apiKey: String,
+        val apiSecret: String,
+        val openDHost: String,
+        val openDPort: Int
+    )
 
-    val holdings = MockDataProvider.holdings
-    val algorithms = MockDataProvider.algorithms
+    fun getCredentials() = CredentialState(
+        apiKey = credentialManager.apiKey,
+        apiSecret = credentialManager.apiSecret,
+        openDHost = credentialManager.openDHost,
+        openDPort = credentialManager.openDPort
+    )
 
-    init {
-        startLiveUpdates()
+    fun saveCredentials(apiKey: String, apiSecret: String, host: String, port: Int) {
+        credentialManager.apiKey = apiKey
+        credentialManager.apiSecret = apiSecret
+        credentialManager.openDHost = host
+        credentialManager.openDPort = port
     }
 
-    private fun startLiveUpdates() {
-        viewModelScope.launch {
-            while (true) {
-                delay(5_000)
-                _watchlist.value = MockDataProvider.refreshedWatchlist()
-                _indices.value = MockDataProvider.refreshedIndices()
-            }
-        }
+    val watchlist: StateFlow<List<Stock>> = marketDataRepository.getWatchlist()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val indices: StateFlow<List<MarketIndex>> = marketDataRepository.getMarketIndices()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val holdings: StateFlow<List<Holding>> = accountRepository.getHoldings()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val algorithms: StateFlow<List<TradingAlgorithm>> = algorithmRepository.getAlgorithms()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val accountBalance: StateFlow<Double> = accountRepository.getAccountBalance()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 37_700.00)
+
+    fun toggleAlgorithm(name: String) {
+        algorithmRepository.toggleAlgorithm(name)
     }
 
     val totalPortfolioValue: Double
-        get() = holdings.sumOf { it.totalValue }
+        get() = holdings.value.sumOf { it.totalValue }
 
     val totalPortfolioCost: Double
-        get() = holdings.sumOf { it.totalCost }
+        get() = holdings.value.sumOf { it.totalCost }
 
     val totalGainLoss: Double
         get() = totalPortfolioValue - totalPortfolioCost
